@@ -1,11 +1,11 @@
-function ExpectimaxAgent(n, actions, scoreFn) {
+function ExpectimaxAgent(n, actions, game) {
   this.n = n;
   this.actions = actions;
-  this.scoreFn = scoreFn;
+  this.game = game;
 }
 
-ExpectimaxAgent.getAction = function(grid) {
-  function expectimax(adversary, grid, depth, score) {
+ExpectimaxAgent.prototype.getAction = function(grid) {
+  function expectimax(adversary, grid, depth, score, actions, game) {
     if (depth === 0) {
       // At the max depth
       return { score : score, action : null};
@@ -15,23 +15,26 @@ ExpectimaxAgent.getAction = function(grid) {
     var bestAction = -1;
     if (adversary) {
       var available = grid.availableCells();
-      for (var cell : available) {
+      for (var cell in available) {
         for (var val = 2; val <= 4; val += 2) {
           // Clone grid
-          var localGrid = new Grid(grid.size, grid);
+          var localGrid = new Grid(grid.size, grid.cells);
 
           // Place tile
-          localGrid.cells[cell.x][cell.y] = val;
+          localGrid.insertTile(new Tile(cell, val));
 
           // simulate!
           var localScore = expectimax(false, localGrid, depth-1, score);
 
-          bestScore += localScore / (available.length * 2);
+          // Val propability
+          var p = val === 2 ? 0.9 : 0.1;
+
+          bestScore += (localScore / available.length) * p;
         }
       }
     } else {
-      for (var action : this.actions) {
-        var nextState = this.scoreFn(action, score, grid);
+      for (var action in actions) {
+        var nextState = game.simulateMove(action, score, grid);
         var nextScore = expectimax(true, nextState.grid, depth,
                                    nextState.score).score;
         if (nextScore >= bestScore) {
@@ -40,9 +43,11 @@ ExpectimaxAgent.getAction = function(grid) {
         }
       }
     }
-    return { score = bestScore, action = bestAction };
+    console.log(bestScore);
+    console.log(bestAction);
+    return { score : bestScore, action : bestAction };
   }
 
-  return expectimax(false, grid, this.n, 0);
+  return expectimax(false, grid, this.n, 0, this.actions, this.game);
 
 };

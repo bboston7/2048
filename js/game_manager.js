@@ -120,6 +120,13 @@ GameManager.prototype.prepareTiles = function () {
 };
 
 // Move a tile and its representation
+GameManager.prototype.moveTileSim = function (tile, cell, grid) {
+  grid.cells[tile.x][tile.y] = null;
+  grid.cells[cell.x][cell.y] = tile;
+  tile.updatePosition(cell);
+};
+
+// Move a tile and its representation
 GameManager.prototype.moveTile = function (tile, cell) {
   this.grid.cells[tile.x][tile.y] = null;
   this.grid.cells[cell.x][cell.y] = tile;
@@ -143,7 +150,7 @@ GameManager.prototype.simulateMove = function (direction, score, grid) {
   this.prepareTiles();
 
   // Clone the grid
-  grid = new Grid(grid.size, grid);
+  grid = new Grid(grid.size, grid.cells);
 
   // Traverse the grid in the right direction and move tiles
   traversals.x.forEach(function (x) {
@@ -152,7 +159,7 @@ GameManager.prototype.simulateMove = function (direction, score, grid) {
       tile = grid.cellContent(cell);
 
       if (tile) {
-        var positions = self.findFarthestPosition(cell, vector);
+        var positions = self.findFarthestPositionSim(cell, vector, grid);
         var next      = grid.cellContent(positions.next);
 
         // Only one merger per row traversal?
@@ -169,7 +176,7 @@ GameManager.prototype.simulateMove = function (direction, score, grid) {
           // Update the score
           score += merged.value;
         } else {
-          self.moveTile(tile, positions.farthest);
+          self.moveTileSim(tile, positions.farthest, grid);
         }
       }
     });
@@ -270,6 +277,22 @@ GameManager.prototype.buildTraversals = function (vector) {
   if (vector.y === 1) traversals.y = traversals.y.reverse();
 
   return traversals;
+};
+
+GameManager.prototype.findFarthestPositionSim = function (cell, vector, grid) {
+  var previous;
+
+  // Progress towards the vector direction until an obstacle is found
+  do {
+    previous = cell;
+    cell     = { x: previous.x + vector.x, y: previous.y + vector.y };
+  } while (grid.withinBounds(cell) &&
+           grid.cellAvailable(cell));
+
+  return {
+    farthest: previous,
+    next: cell // Used to check if a merge is required
+  };
 };
 
 GameManager.prototype.findFarthestPosition = function (cell, vector) {
