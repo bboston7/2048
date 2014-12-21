@@ -3,10 +3,4 @@ window.requestAnimationFrame(function () {
   var game = new GameManager(4, KeyboardInputManager, HTMLActuator,
                              LocalStorageManager);
 
-  var agent = new ExpectimaxAgent(3, [0,1,2,3], game);
-
-  while (!game.isGameTerminated()) {
-    var move = agent.getAction(game.grid).action;
-    game.move(move);
-  }
 });

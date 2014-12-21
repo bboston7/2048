@@ -15,16 +15,16 @@ ExpectimaxAgent.prototype.getAction = function(grid) {
     var bestAction = -1;
     if (adversary) {
       var available = grid.availableCells();
-      for (var cell in available) {
+      for (var i = 0; i < available.length; ++i) {
         for (var val = 2; val <= 4; val += 2) {
           // Clone grid
           var localGrid = new Grid(grid.size, grid.cells);
 
           // Place tile
-          localGrid.insertTile(new Tile(cell, val));
+          localGrid.insertTile(new Tile(available[i], val));
 
           // simulate!
-          var localScore = expectimax(false, localGrid, depth-1, score);
+          var localScore = expectimax(false, localGrid, depth-1, score).score;
 
           // Val propability
           var p = val === 2 ? 0.9 : 0.1;
@@ -43,8 +43,6 @@ ExpectimaxAgent.prototype.getAction = function(grid) {
         }
       }
     }
-    console.log(bestScore);
-    console.log(bestAction);
     return { score : bestScore, action : bestAction };
   }
 

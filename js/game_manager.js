@@ -34,6 +34,7 @@ GameManager.prototype.isGameTerminated = function () {
 // Set up the game
 GameManager.prototype.setup = function () {
   var previousState = this.storageManager.getGameState();
+  previousState = false;
 
   // Reload the game from a previous game if present
   if (previousState) {
@@ -56,7 +57,22 @@ GameManager.prototype.setup = function () {
 
   // Update the actuator
   this.actuate();
+
+  // Start the AI
+  this.agent = new ExpectimaxAgent(3, [0,1,2,3], this);
+
+  var that = this;
+  setInterval(function() { that.aiMove() }, 1000);
 };
+
+GameManager.prototype.aiMove = function() {
+  if (!this.isGameTerminated()) {
+    var move = this.agent.getAction(this.grid).action;
+    console.log(move);
+    this.inputManager.emit("move", move);
+    //this.move(move);
+  }
+}
 
 // Set up the initial tiles to start the game with
 GameManager.prototype.addStartTiles = function () {
