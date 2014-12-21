@@ -127,6 +127,59 @@ GameManager.prototype.moveTile = function (tile, cell) {
 };
 
 // Move tiles on the grid in the specified direction
+GameManager.prototype.simulateMove = function (direction, score, grid) {
+  // 0: up, 1: right, 2: down, 3: left
+  var self = this;
+
+  if (this.isGameTerminated()) return; // Don't do anything if the game's over
+
+  var cell, tile;
+
+  var vector     = this.getVector(direction);
+  var traversals = this.buildTraversals(vector);
+
+  // Save the current tile positions and remove merger information
+  // TODO: Might need to change this
+  this.prepareTiles();
+
+  // Clone the grid
+  grid = new Grid(grid.size, grid);
+
+  // Traverse the grid in the right direction and move tiles
+  traversals.x.forEach(function (x) {
+    traversals.y.forEach(function (y) {
+      cell = { x: x, y: y };
+      tile = grid.cellContent(cell);
+
+      if (tile) {
+        var positions = self.findFarthestPosition(cell, vector);
+        var next      = grid.cellContent(positions.next);
+
+        // Only one merger per row traversal?
+        if (next && next.value === tile.value && !next.mergedFrom) {
+          var merged = new Tile(positions.next, tile.value * 2);
+          merged.mergedFrom = [tile, next];
+
+          grid.insertTile(merged);
+          grid.removeTile(tile);
+
+          // Converge the two tiles' positions
+          tile.updatePosition(positions.next);
+
+          // Update the score
+          score += merged.value;
+        } else {
+          self.moveTile(tile, positions.farthest);
+        }
+      }
+    });
+  });
+
+  // Return the grid and score for this move
+  return { grid : grid, score : score};
+};
+
+// Move tiles on the grid in the specified direction
 GameManager.prototype.move = function (direction) {
   // 0: up, 1: right, 2: down, 3: left
   var self = this;
