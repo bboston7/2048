@@ -59,7 +59,7 @@ GameManager.prototype.setup = function () {
   this.actuate();
 
   // Start the AI
-  this.agent = new ExpectimaxAgent(3, [0,1,2,3], this);
+  this.agent = new ExpectimaxAgent(2, [0,1,2,3], this);
 
   var that = this;
   setInterval(function() { that.aiMove() }, 1000);
@@ -68,9 +68,7 @@ GameManager.prototype.setup = function () {
 GameManager.prototype.aiMove = function() {
   if (!this.isGameTerminated()) {
     var move = this.agent.getAction(this.grid).action;
-    console.log(move);
     this.inputManager.emit("move", move);
-    //this.move(move);
   }
 }
 
@@ -166,25 +164,25 @@ GameManager.prototype.simulateMove = function (direction, score, grid) {
   this.prepareTiles();
 
   // Clone the grid
-  grid = new Grid(grid.size, grid.cells);
+  var localGrid = new Grid(grid.size, grid.cells);
 
   // Traverse the grid in the right direction and move tiles
   traversals.x.forEach(function (x) {
     traversals.y.forEach(function (y) {
       cell = { x: x, y: y };
-      tile = grid.cellContent(cell);
+      tile = localGrid.cellContent(cell);
 
       if (tile) {
         var positions = self.findFarthestPositionSim(cell, vector, grid);
-        var next      = grid.cellContent(positions.next);
+        var next      = localGrid.cellContent(positions.next);
 
         // Only one merger per row traversal?
         if (next && next.value === tile.value && !next.mergedFrom) {
           var merged = new Tile(positions.next, tile.value * 2);
           merged.mergedFrom = [tile, next];
 
-          grid.insertTile(merged);
-          grid.removeTile(tile);
+          localGrid.insertTile(merged);
+          localGrid.removeTile(tile);
 
           // Converge the two tiles' positions
           tile.updatePosition(positions.next);
@@ -192,14 +190,14 @@ GameManager.prototype.simulateMove = function (direction, score, grid) {
           // Update the score
           score += merged.value;
         } else {
-          self.moveTileSim(tile, positions.farthest, grid);
+          self.moveTileSim(tile, positions.farthest, localGrid);
         }
       }
     });
   });
 
   // Return the grid and score for this move
-  return { grid : grid, score : score};
+  return { grid : localGrid, score : score};
 };
 
 // Move tiles on the grid in the specified direction

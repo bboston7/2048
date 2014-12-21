@@ -24,7 +24,8 @@ ExpectimaxAgent.prototype.getAction = function(grid) {
           localGrid.insertTile(new Tile(available[i], val));
 
           // simulate!
-          var localScore = expectimax(false, localGrid, depth-1, score).score;
+          var localScore = expectimax(false, localGrid, depth-1, score,
+                                      actions, game).score;
 
           // Val propability
           var p = val === 2 ? 0.9 : 0.1;
@@ -33,19 +34,32 @@ ExpectimaxAgent.prototype.getAction = function(grid) {
         }
       }
     } else {
-      for (var action in actions) {
-        var nextState = game.simulateMove(action, score, grid);
+      //for (var action in actions) {
+      for (var action = 0; action < 4; ++action) {
+        var nextState = game.simulateMove(action, 0, grid);
+
+        // No points for an illegal move
+        if (nextState.grid.equals(grid)) {
+          console.log("illegal move");
+          continue;
+        }
+
         var nextScore = expectimax(true, nextState.grid, depth,
-                                   nextState.score).score;
-        if (nextScore >= bestScore) {
+                                   nextState.score, actions, game).score;
+
+        // TODO: Check for losing states!
+
+        if (nextScore  >= bestScore) {
           bestScore = nextScore;
           bestAction = action;
         }
       }
     }
-    return { score : bestScore, action : bestAction };
+    return { score : bestScore + score, action : bestAction };
   }
 
-  return expectimax(false, grid, this.n, 0, this.actions, this.game);
+  var res = expectimax(false, grid, this.n, 0, this.actions, this.game);
+  console.log(res);
+  return res;
 
 };

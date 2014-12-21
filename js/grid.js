@@ -115,3 +115,14 @@ Grid.prototype.serialize = function () {
     cells: cellState
   };
 };
+
+Grid.prototype.equals = function(other) {
+  for (var x = 0; x < this.size; ++x) {
+    for (var y = 0; y < this.size; ++y) {
+      var thisVal = this.cells[x][y] === null ? -1 : this.cells[x][y].value
+      var otherVal = other.cells[x][y] === null ? -1 : other.cells[x][y].value
+      if (thisVal !== otherVal) return false;
+    }
+  }
+  return true;
+}
